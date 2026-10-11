@@ -52,7 +52,7 @@ settings = Settings(
     openai_guardrail_model=os.getenv("OPENAI_GUARDRAIL_MODEL", "gpt-5.4-nano"),
     ollama_agent_model=os.getenv("OLLAMA_AGENT_MODEL", "gemma3:4b"),
     ollama_guardrail_model=os.getenv("OLLAMA_GUARDRAIL_MODEL", "gemma3:4b"),
-    pdf_dir=Path(os.getenv("ARGUS_PDF_DIR", str(PROJECT_ROOT / "Data" / "sample_docs"))),
+    pdf_dir=Path(os.getenv("ARGUS_PDF_DIR", str(PROJECT_ROOT / "Data" / "pdfs"))),
     training_csv=Path(
         os.getenv(
             "ARGUS_TRAINING_CSV",

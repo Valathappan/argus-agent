@@ -89,3 +89,14 @@ python app.py "Do new semiconductor export restrictions affect our suppliers?"
 > The local FAISS index and its JSON chunk-metadata sidecar are written to
 > `faiss_db/`. Run `python -m rag.ingest` to build or replace the index before
 > querying; the embedding model is downloaded on first use.
+
+## Running the graph test
+
+The graph test uses mocked news and regulation responses, so it does not call live services or require API credentials. From the repository root, activate the project virtual environment and run:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pytest tests/test_graph.py -v
+```
+
+If pytest is not installed in the environment, install the test extra with `python -m pip install -e ".[test]"` (or install `pytest` directly).
