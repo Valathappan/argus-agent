@@ -1,4 +1,4 @@
-"""Package marker.
+﻿"""MCP-style external intelligence clients for ARGUS."""
+from mcp.result import ToolItem, ToolResult
 
-Work-stream / owner: MCP / integrations (Pair C)
-"""
+__all__ = ["ToolItem", "ToolResult"]
