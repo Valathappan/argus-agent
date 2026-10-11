@@ -69,7 +69,6 @@ pip install -r requirements.txt
 python app.py "Do new semiconductor export restrictions affect our suppliers?"
 ```
 
-> Note on the vector store: the blueprint names FAISS. FAISS has no native
-> metadata filtering, which the "stale contract vs. active replacement"
-> requirement (§25) needs. `rag/faiss_store.py` keeps the interface swappable
-> so the team can move to pgvector/Qdrant if time allows.
+> The local FAISS index and its JSON chunk-metadata sidecar are written to
+> `faiss_db/`. Run `python -m rag.ingest` to build or replace the index before
+> querying; the embedding model is downloaded on first use.
