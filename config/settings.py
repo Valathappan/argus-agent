@@ -33,8 +33,9 @@ class Settings:
 
     pdf_dir: Path = PROJECT_ROOT / "data" / "pdfs"
     training_csv: Path = PROJECT_ROOT / "data" / "guardrail_training.csv"
-    chroma_dir: Path = PROJECT_ROOT / "chroma_db"
-    collection_name: str = "argus_docs"
+    faiss_dir: Path = PROJECT_ROOT / "faiss_db"
+    faiss_index_name: str = "argus_docs"
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
 
 settings = Settings()

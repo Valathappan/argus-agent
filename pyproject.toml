@@ -5,12 +5,33 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "argus-agent"
 version = "0.1.0"
-description = "Study project: Argus Agent"
+description = "Governed agentic risk and global surveillance system"
+readme = "README.md"
 requires-python = ">=3.10"
+dependencies = [
+    "langgraph>=1.0",
+    "langchain-openai>=1.0",
+    "langchain-ollama>=1.0",
+    "faiss-cpu>=1.8.0",
+    "sentence-transformers>=3.0",
+    "pypdf>=5.0",
+    "scikit-learn>=1.5",
+    "python-dotenv>=1.0",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
 
 [tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["src"]
+where = ["."]
+include = [
+    "agents*",
+    "config*",
+    "evaluation*",
+    "graph*",
+    "guardrails*",
+    "mcp*",
+    "models*",
+    "rag*",
+]
