@@ -1,11 +1,22 @@
-"""Vector store wrapper (FAISS for the POC; see README note on pgvector/Qdrant for metadata filtering).
+import chromadb
 
-ARGUS - Autonomous Risk & Global Unified Surveillance Agent (class build).
+from config.settings import settings
 
-  Work-stream / owner : RAG / knowledge (Pair B)
-  Blueprint reference : §11
 
-TODO (tomorrow):
-  - Build/load the index; expose add() and similarity_search(). Keep the
-    interface swappable.
-"""
+def get_client():
+    return chromadb.PersistentClient(path=str(settings.chroma_dir))
+
+
+def get_collection():
+    # No embedding function is passed, so ChromaDB uses its default local model (all-MiniLM-L6-v2).
+    return get_client().get_or_create_collection(
+        name=settings.collection_name,
+        metadata={"hnsw:space": "cosine"},
+    )
+
+
+def reset_collection():
+    client = get_client()
+    if settings.collection_name in [collection.name for collection in client.list_collections()]:
+        client.delete_collection(settings.collection_name)
+    return get_collection()
