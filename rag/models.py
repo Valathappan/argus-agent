@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import TypedDict
 
 
 @dataclass(frozen=True)
@@ -16,9 +17,8 @@ class Chunk:
     page: int
 
 
-@dataclass(frozen=True)
-class RetrievedChunk:
+class RetrievedChunk(TypedDict):
     text: str
-    source: str
-    page: int
-    distance: float
+    source_id: str
+    metadata: dict[str, str | None]
+    score: float

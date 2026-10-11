@@ -1,16 +1,19 @@
 from rag.models import RetrievedChunk
-from rag.faiss_store import get_collection
+from rag.faiss_store import query_index
 
 
 def retrieve(query: str, top_k: int) -> list[RetrievedChunk]:
-    """Return the `top_k` chunks closest to the query (smaller distance = more similar)."""
-    results = get_collection().query(query_texts=[query], n_results=top_k)
-
-    documents = results["documents"][0]
-    metadatas = results["metadatas"][0]
-    distances = results["distances"][0]
-
-    return [
-        RetrievedChunk(text=text, source=meta["source"], page=meta["page"], distance=distance)
-        for text, meta, distance in zip(documents, metadatas, distances)
-    ]
+    """Return the `top_k` closest chunks in the standard retrieved-chunk shape."""
+    metadata_fields = ("doc_type", "supplier", "product", "region", "doc_date", "version")
+    retrieved = []
+    for chunk, score in query_index(query, top_k):
+        meta = chunk["metadata"]
+        retrieved.append(
+            RetrievedChunk(
+                text=chunk["text"],
+                source_id=f"{meta['source']}#p{meta['page']}",
+                metadata={field: meta.get(field) for field in metadata_fields},
+                score=score,
+            )
+        )
+    return retrieved

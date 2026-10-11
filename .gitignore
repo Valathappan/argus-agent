@@ -5,6 +5,7 @@ venv/
 .env
 *.faiss
 *.index
+faiss_db/
 .DS_Store
 .pytest_cache/
 *.log

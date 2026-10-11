@@ -1,4 +1,4 @@
-"""Ingestion pipeline: PDFs -> pages -> chunks -> embeddings -> ChromaDB."""
+"""Ingestion pipeline: PDFs -> pages -> chunks -> embeddings -> FAISS."""
 
 from collections import Counter
 
@@ -31,10 +31,10 @@ def main():
     for chunk in chunks[:2]:
         console.print(Panel(chunk.text, title=f"Sample chunk: {chunk.id}", border_style="cyan"))
 
-    console.rule("Step 3: Embed chunks and store them in ChromaDB")
+    console.rule("Step 3: Embed chunks and store them in FAISS")
     stored = store_chunks(chunks)
-    console.print(f"  [green]Stored {stored} chunks in collection '{settings.collection_name}'[/green]")
-    console.print(f"  Database folder: {settings.chroma_dir}")
+    console.print(f"  [green]Stored {stored} chunks in FAISS index '{settings.faiss_index_name}'[/green]")
+    console.print(f"  Index folder: {settings.faiss_dir}")
 
 
 if __name__ == "__main__":
