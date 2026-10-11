@@ -64,7 +64,24 @@ the seeded contradiction scenario in `evaluation/datasets/`.
 ## Getting started
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+```
+
+Activate the environment:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+On macOS/Linux, use:
+
+```bash
+source .venv/bin/activate
+```
+
+Then install dependencies and run the app:
+
+```bash
 pip install -r requirements.txt
 python app.py "Do new semiconductor export restrictions affect our suppliers?"
 ```
