@@ -90,13 +90,33 @@ python app.py "Do new semiconductor export restrictions affect our suppliers?"
 > `faiss_db/`. Run `python -m rag.ingest` to build or replace the index before
 > querying; the embedding model is downloaded on first use.
 
+##Test cases
 ## Running the graph test
 
 The graph test uses mocked news and regulation responses, so it does not call live services or require API credentials. From the repository root, activate the project virtual environment and run:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
-python -m pytest tests/test_graph.py -v
+python -m pytest tests/test_graph.py -v -s
 ```
 
 If pytest is not installed in the environment, install the test extra with `python -m pip install -e ".[test]"` (or install `pytest` directly).
+
+## Running the RAG pipeline test
+
+This offline test loads the PDFs from the configured `ARGUS_PDF_DIR` (by default `data/pdfs`) and checks that extracted text becomes chunks with source and page metadata. It does not create a FAISS index or download the embedding model. From the repository root, activate the virtual environment and run:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pytest tests/test_rag_pipeline.py -v -s
+```
+
+
+## Running the FAISS test
+
+This test writes a temporary FAISS index, reloads it from disk, and checks that vector search returns the nearest chunk. It uses deterministic test embeddings, so it does not download the model. FAISS and NumPy must be installed in the active environment.
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pytest tests/test_faiss_store.py -v -s
+```

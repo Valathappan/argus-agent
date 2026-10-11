@@ -1,7 +1,7 @@
 ﻿"""Tests for the compiled external-research graph.
 
 Run from the repository root with:
-    python -m pytest tests/test_graph.py -v
+    python -m pytest tests/test_graph.py -v -s
 """
 
 from graph import graph as graph_module
@@ -47,11 +47,19 @@ def test_graph_passes_question_to_sources_and_builds_cited_report(monkeypatch):
     monkeypatch.setattr(graph_module, "search_news", fake_search_news)
     monkeypatch.setattr(graph_module, "search_regulation", fake_search_regulation)
 
-    result = graph_module.graph.invoke({"question": "Do restrictions affect suppliers?"})
+    question = "Do restrictions affect suppliers?"
+    print(f"\n[Graph] Starting research question: {question}")
+    result = graph_module.graph.invoke({"question": question})
+    print(f"[Graph] News source called with: {calls['news'][0]}")
+    print(f"[Graph] Regulation source called with: {calls['regulation'][0]}")
+    print(f"[Graph] News evidence returned: {len(result['news_articles'])} item(s)")
+    print(f"[Graph] Regulation evidence returned: {len(result['government_evidence'])} item(s)")
+    print("[Graph] Final report:")
+    print(result["final_report"])
 
     assert calls == {
-        "news": ["Do restrictions affect suppliers?"],
-        "regulation": ["Do restrictions affect suppliers?"],
+        "news": [question],
+        "regulation": [question],
     }
     assert len(result["news_articles"]) == 1
     assert len(result["government_evidence"]) == 1
