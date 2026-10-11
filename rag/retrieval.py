@@ -1,11 +1,16 @@
-"""Retrieval API the internal analyst calls: similarity search + metadata filtering.
+from rag.models import RetrievedChunk
+from rag.faiss_store import get_collection
 
-ARGUS - Autonomous Risk & Global Unified Surveillance Agent (class build).
 
-  Work-stream / owner : RAG / knowledge (Pair B)
-  Blueprint reference : §11
+def retrieve(query: str, top_k: int) -> list[RetrievedChunk]:
+    """Return the `top_k` chunks closest to the query (smaller distance = more similar)."""
+    results = get_collection().query(query_texts=[query], n_results=top_k)
 
-TODO (tomorrow):
-  - search(query, filters) -> chunks; filter out expired/obsolete records
-    BEFORE returning.
-"""
+    documents = results["documents"][0]
+    metadatas = results["metadatas"][0]
+    distances = results["distances"][0]
+
+    return [
+        RetrievedChunk(text=text, source=meta["source"], page=meta["page"], distance=distance)
+        for text, meta, distance in zip(documents, metadatas, distances)
+    ]
