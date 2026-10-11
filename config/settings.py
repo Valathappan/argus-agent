@@ -31,11 +31,13 @@ class Settings:
     chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "40"))
     top_k: int = int(os.getenv("TOP_K", "4"))
 
-    pdf_dir: Path = PROJECT_ROOT / "data" / "pdfs"
+    pdf_dir: Path = PROJECT_ROOT / "Data" / "pdfs"
+    knowledge_base_dir: Path = PROJECT_ROOT / "Data" / "ARGUS_sample_knowledge_base"
     training_csv: Path = PROJECT_ROOT / "data" / "guardrail_training.csv"
     faiss_dir: Path = PROJECT_ROOT / "faiss_db"
     faiss_index_name: str = "argus_docs"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    retrieval_min_score: float = float(os.getenv("RETRIEVAL_MIN_SCORE", "0.25"))
 
 
 settings = Settings()

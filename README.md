@@ -72,3 +72,8 @@ python app.py "Do new semiconductor export restrictions affect our suppliers?"
 > The local FAISS index and its JSON chunk-metadata sidecar are written to
 > `faiss_db/`. Run `python -m rag.ingest` to build or replace the index before
 > querying; the embedding model is downloaded on first use.
+> `rag.retrieval.search_internal(query, top_k, filters)` returns retrieved
+> chunks plus a reason when no sufficiently relevant result is found. Markdown
+> documents under `Data/ARGUS_sample_knowledge_base/` and PDFs under
+> `Data/pdfs/` are indexed; the Markdown front matter supplies supplier,
+> product, region, type, date, and version metadata for filtering.

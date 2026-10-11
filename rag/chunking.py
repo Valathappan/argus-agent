@@ -26,6 +26,7 @@ def chunk_pages(pages: list[Page], chunk_size: int, overlap: int) -> list[Chunk]
                     text=piece,
                     source=page.source,
                     page=page.page,
+                    metadata=page.metadata.copy(),
                 )
             )
     return chunks

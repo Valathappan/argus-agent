@@ -8,14 +8,15 @@ from rich.panel import Panel
 from config.settings import settings
 from rag.chunking import chunk_pages
 from rag.ingestion import store_chunks
-from rag.loader import load_pdfs
+from rag.loader import load_documents
 
 console = Console()
 
 
 def main():
     console.rule("Step 1: Load PDFs")
-    pages = load_pdfs(settings.pdf_dir)
+    pages = load_documents(settings.pdf_dir)
+    pages.extend(load_documents(settings.knowledge_base_dir))
     if not pages:
         console.print(f"[red]No PDF text found in {settings.pdf_dir}. Add your PDFs there and run again.[/red]")
         return

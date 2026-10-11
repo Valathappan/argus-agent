@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -8,7 +9,10 @@ from rag.models import Chunk
 
 class IndexedChunk(TypedDict):
     text: str
-    metadata: dict[str, str | int]
+    metadata: dict[str, Any]
+
+
+logger = logging.getLogger(__name__)
 
 
 _embedding_model: Any | None = None
@@ -58,7 +62,11 @@ def store_chunks(chunks: list[Chunk]) -> int:
     indexed_chunks = [
         IndexedChunk(
             text=chunk.text,
-            metadata={"source": chunk.source, "page": chunk.page},
+            metadata={
+                **chunk.metadata,
+                "source": chunk.source,
+                "page": chunk.page,
+            },
         )
         for chunk in chunks
     ]
@@ -99,9 +107,9 @@ def load_index() -> tuple[Any, list[IndexedChunk]]:
     return _index, _indexed_chunks
 
 
-def query_index(query: str, top_k: int) -> list[tuple[IndexedChunk, float]]:
+def query_index(query: str, top_k: int | None) -> list[tuple[IndexedChunk, float]]:
     """Return the nearest chunks and cosine-similarity scores."""
-    if top_k <= 0:
+    if top_k is not None and top_k <= 0:
         return []
 
     import numpy as np
@@ -115,7 +123,8 @@ def query_index(query: str, top_k: int) -> list[tuple[IndexedChunk, float]]:
         model.encode([query], convert_to_numpy=True, normalize_embeddings=True),
         dtype=np.float32,
     )
-    scores, positions = index.search(query_embedding, min(top_k, index.ntotal))
+    result_count = index.ntotal if top_k is None else min(top_k, index.ntotal)
+    scores, positions = index.search(query_embedding, result_count)
     return [
         (indexed_chunks[int(position)], float(score))
         for position, score in zip(positions[0], scores[0])

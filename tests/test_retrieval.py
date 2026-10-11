@@ -4,7 +4,7 @@ from rag import retrieval
 def test_retrieve_returns_standard_chunk_shape(monkeypatch):
     def fake_query_index(query, top_k):
         assert query == "supplier contract"
-        assert top_k == 1
+        assert top_k is None
         return [
             (
                 {
