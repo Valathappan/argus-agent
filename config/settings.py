@@ -52,11 +52,11 @@ settings = Settings(
     openai_guardrail_model=os.getenv("OPENAI_GUARDRAIL_MODEL", "gpt-5.4-nano"),
     ollama_agent_model=os.getenv("OLLAMA_AGENT_MODEL", "gemma3:4b"),
     ollama_guardrail_model=os.getenv("OLLAMA_GUARDRAIL_MODEL", "gemma3:4b"),
-    pdf_dir=Path(os.getenv("ARGUS_PDF_DIR", str(PROJECT_ROOT / "data" / "sample_docs"))),
+    pdf_dir=Path(os.getenv("ARGUS_PDF_DIR", str(PROJECT_ROOT / "Data" / "sample_docs"))),
     training_csv=Path(
         os.getenv(
             "ARGUS_TRAINING_CSV",
-            str(PROJECT_ROOT / "data" / "guardrail_training.csv"),
+            str(PROJECT_ROOT / "Data" / "guardrail_training.csv"),
         )
     ),
     chunk_size=_env_int("CHUNK_SIZE", 200),
@@ -66,7 +66,7 @@ settings = Settings(
         "ARGUS_EMBEDDING_MODEL",
         "sentence-transformers/all-MiniLM-L6-v2",
     ),
-    faiss_dir=Path(os.getenv("ARGUS_FAISS_DIR", str(PROJECT_ROOT / "data" / "index"))),
+    faiss_dir=Path(os.getenv("ARGUS_FAISS_DIR", str(PROJECT_ROOT / "Data" / "index"))),
     faiss_index_name=os.getenv("ARGUS_FAISS_INDEX_NAME", "argus"),
 )
 
