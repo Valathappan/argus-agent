@@ -1,4 +1,4 @@
-# ARGUS Agentic AI — Live Class Assignment Plan (Divided into 3-Groups)
+# ARGUS Agentic AI — Live Class Assignment Plan (Divided into 3-Groups)...
 
 ARGUS (Autonomous Risk & Global Unified Surveillance Agent): an agent that combines external intelligence with internal company context, verifies evidence, identifies contradictions, scores risk/confidence, and recommends actions.
 
