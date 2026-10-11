@@ -1,12 +1,32 @@
-"""Structured Claim model (and friends). FROZEN INTERFACE — every stream reads/writes claims.
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any, Optional, Literal
 
-ARGUS - Autonomous Risk & Global Unified Surveillance Agent (class build).
+class RetrievedChunk(BaseModel):
+    text: str
+    source_id: str
+    metadata: Dict[str, Any]
+    score: float
 
-  Work-stream / owner : Orchestration (Pair A / tech lead)
-  Blueprint reference : §15
+class ToolResult(BaseModel):
+    status: Literal["ok", "empty", "error"]
+    mock: bool = True
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    error: Optional[str] = None
 
-TODO (tomorrow):
-  - Define Claim with: claim, claim_type, sources, primary_source,
-    source_authority, recency_score, corroboration_score, contradiction,
-    confidence (see §15).
-"""
+class Claim(BaseModel):
+    claim_id: str
+    text: str
+    source_ids: List[str]
+    source_authority: Literal["primary", "secondary", "unknown"]
+    source_date: Optional[str] = None
+    confidence: float = Field(ge=0.0, le=1.0)
+    status: Literal["supported", "unverified", "contradicted"]
+
+class RecommendedAction(BaseModel):
+    action_id: str
+    description: str
+    priority: Literal["low", "medium", "high"]
+    owner: Literal["procurement", "legal", "operations", "leadership"]
+    rationale: str
+    source_ids: List[str]
+    requires_human_approval: bool = True

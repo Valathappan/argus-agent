@@ -20,6 +20,16 @@ def _env_float(name: str, default: float) -> float:
     return float(os.getenv(name, str(default)))
 
 
+# Investigation and budget limits.
+MAX_INVESTIGATION_ITERATIONS = int(os.getenv("MAX_INVESTIGATION_ITERATIONS", 3))
+TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", 5))
+TOOL_TIMEOUT_SECONDS = int(os.getenv("TOOL_TIMEOUT_SECONDS", 10))
+
+# Scoring weights.
+RISK_WEIGHT_IMPACT = 0.4
+RISK_WEIGHT_PROBABILITY = 0.4
+RISK_WEIGHT_URGENCY = 0.2
+
 # §17: evidence sufficiency gate.
 CONFIDENCE_THRESHOLD = _env_float("ARGUS_CONFIDENCE_THRESHOLD", 0.75)
 MAX_ITERATIONS = _env_int("ARGUS_MAX_ITERATIONS", 10)
