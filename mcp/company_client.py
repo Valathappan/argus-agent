@@ -1,10 +1,18 @@
-"""MCP company-intelligence client: company_profile, supplier_lookup, get_company_events.
+﻿"""Stretch placeholder for company and supplier intelligence integrations."""
+from mcp.result import ToolResult
 
-ARGUS - Autonomous Risk & Global Unified Surveillance Agent (class build).
 
-  Work-stream / owner : MCP / integrations (Pair C)
-  Blueprint reference : §12
+def _not_implemented(tool: str) -> ToolResult:
+    return {"status": "error", "mock": False, "items": [], "error": f"{tool} is not implemented"}
 
-TODO (tomorrow):
-  - Stub supplier/company lookups used by exposure analysis.
-"""
+
+def company_profile(company: str) -> ToolResult:
+    return _not_implemented("company_profile")
+
+
+def supplier_lookup(query: str) -> ToolResult:
+    return _not_implemented("supplier_lookup")
+
+
+def get_company_events(company: str) -> ToolResult:
+    return _not_implemented("get_company_events")
