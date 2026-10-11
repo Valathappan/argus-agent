@@ -1,4 +1,4 @@
-# ARGUS — Autonomous Risk & Global Unified Surveillance Agent
+﻿# ARGUS — Autonomous Risk & Global Unified Surveillance Agent
 
 Class build for the Agentic AI cohort. ARGUS is a **governed agentic system**:
 it takes an open-ended business question (e.g. "do new semiconductor export
@@ -19,61 +19,64 @@ evaluators + guardrails (quality & safety).
 
 ## Layout
 
-```
+```text
 argus/
 ├── app.py            Entrypoint: build the graph, run one investigation
 ├── config/           Model registry + runtime settings (thresholds, budgets)
-├── graph/            LangGraph state, graph wiring, routing, checkpoints
-├── agents/           Supervisor + ReAct agents (news, internal, verify, risk, recommend, judge)
+├── graph/            State, graph wiring, routing, checkpoints
+├── agents/           Supervisor and research agents
 ├── rag/              FAISS ingestion, retrieval, metadata-aware reranking
-├── mcp/              News / government / market / company tool clients
-├── models/           Claim schema + model-cascade router
-├── guardrails/       Evidence gate helpers, injection defence, access control, budgets
-├── evaluation/       Metrics, regression harness, benchmark datasets (seeded hard cases)
-└── tests/            Unit tests (gate, claims)
+├── mcp/              News, government, market and company tool clients
+├── models/           Claim schema and model-cascade router
+├── guardrails/       Evidence gate, injection defence, access control, budgets
+├── evaluation/       Metrics, regression harness and benchmark datasets
+└── tests/            Unit and integration tests
 ```
-
-## Work-stream → pair ownership (for tomorrow)
-
-| Work-stream | Directories | Pair |
-|---|---|---|
-| Orchestration / platform | `graph/`, `models/schemas.py`, `config/settings.py` | Pair A (tech lead) |
-| RAG / knowledge | `rag/` | Pair B |
-| MCP / integrations | `mcp/` | Pair C |
-| Agents / reasoning | `agents/` | Pair D |
-| Guardrails / governance | `guardrails/` | Pair E |
-| Model economics / eval | `models/cascade.py`, `config/models.py`, `evaluation/` | Pair F |
-
-**Frozen interfaces — do not change without the tech lead:** `graph/state.py`
-(`IntelligenceState`, §7), `models/schemas.py` (`Claim`, §15), and the MCP tool
-signatures (§12). Everyone builds against these, so lock them first and let
-other pairs work off stubs/mocks until live versions land.
-
-## Build order (blueprint §26)
-
-1. **Phase 1 — Foundation:** state, supervisor, FAISS ingest/retrieve, one news MCP.
-2. **Phase 2 — Agentic research:** ReAct loop, structured claims, evidence gate, bounded retries.
-3. **Phase 3 — Intelligence quality:** contradiction detection, credibility scoring, verification, evaluator.
-4. **Phase 4 — Model economics:** tiered cascade, confidence-based escalation, cost telemetry.
-5. **Phase 5 — Enterprise controls:** human approval, checkpointing, observability, injection defence.
-6. **Phase 6 — Autonomous mode:** scheduled discovery, clustering, impact ranking.
-
-For the 2-hour session, aim for a **walking skeleton** (Phases 1–2) that passes
-the seeded contradiction scenario in `evaluation/datasets/`.
 
 ## Getting started
 
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+Create and activate a virtual environment:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+On macOS/Linux, activate it with `source .venv/bin/activate`. Then install
+project dependencies and run the app:
+
+```powershell
+python -m pip install -r requirements.txt
 python app.py "Do new semiconductor export restrictions affect our suppliers?"
 ```
 
-> The local FAISS index and its JSON chunk-metadata sidecar are written to
-> `faiss_db/`. Run `python -m rag.ingest` to build or replace the index before
-> querying; the embedding model is downloaded on first use.
-> `rag.retrieval.search_internal(query, top_k, filters)` returns retrieved
-> chunks plus a reason when no sufficiently relevant result is found. Markdown
-> documents under `Data/ARGUS_sample_knowledge_base/` and PDFs under
-> `Data/pdfs/` are indexed; the Markdown front matter supplies supplier,
-> product, region, type, date, and version metadata for filtering.
+## RAG data and index
+
+The PDF input defaults to `data/pdfs` and can be overridden with
+`ARGUS_PDF_DIR`. Markdown documents under `data/ARGUS_sample_knowledge_base`
+are also used by the internal knowledge retrieval pipeline. Their front matter
+provides supplier, product, region, type, date and version metadata.
+
+The FAISS index and its metadata sidecar default to `faiss_db/`. Run
+`python -m rag.ingest` to build or replace the PDF index; the embedding model
+is downloaded on first use. `rag.retrieval.search_internal(query, top_k,
+filters)` returns retrieved chunks and a reason when no sufficiently relevant
+result is found.
+
+## Running the tests
+
+Activate the virtual environment from the repository root, then run a test
+with `python -m pytest <test-file> -v -s`. The `-s` option displays progress
+logs printed by tests. These focused tests are available:
+
+```powershell
+python -m pytest tests/test_graph.py -v -s
+python -m pytest tests/test_rag_pipeline.py -v -s
+python -m pytest tests/test_faiss_store.py -v -s
+```
+
+The graph test mocks external sources. The RAG pipeline test reads the bundled
+PDFs and checks extracted text and chunk metadata. The FAISS test builds a
+temporary real FAISS index using deterministic test embeddings, so it does not
+download the embedding model. FAISS and NumPy must be installed to run it.
+
