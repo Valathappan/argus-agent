@@ -1,18 +1,10 @@
-# ARGUS dependencies — pinned loosely for the class build; tighten per phase.
-# Phase 1-2 (foundation + agentic research)
-langgraph>=0.2
-langchain>=0.3
-langchain-core>=0.3
-faiss-cpu>=1.8
-pydantic>=2.7
+langgraph>=1.0
+langchain-openai>=1.0
+langchain-ollama>=1.0
+chromadb>=1.0
+pypdf>=5.0
+scikit-learn>=1.5
 python-dotenv>=1.0
-
-# MCP tool layer (§12)
-mcp>=1.0
-
-# Model providers (pick what your tier config uses)
-# anthropic>=0.40
-# openai>=1.40
-
-# Eval + tests
+rich>=13.0
 pytest>=8.0
+-e .
