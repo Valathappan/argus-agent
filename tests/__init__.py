@@ -1,4 +1,2 @@
-"""Package marker.
+"""ARGUS test suite."""
 
-Work-stream / owner: Shared
-"""

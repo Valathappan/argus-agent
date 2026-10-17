@@ -1,4 +1,5 @@
-"""Package marker.
+"""retrieval-augmented internal knowledge."""
 
-Work-stream / owner: RAG / knowledge (Pair B)
-"""
+# RAG sequence: package entry point; loader -> chunking -> ingest/store -> retrieval/reranking.
+# Input: import requests from the RAG modules.
+# Output: exposes the package namespace; pipeline functions are imported from their modules.

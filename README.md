@@ -1,75 +1,89 @@
-# ARGUS — Autonomous Risk & Global Unified Surveillance Agent
+# ARGUS — Autonomous Risk & Global Unified Surveillance
 
-Class build for the Agentic AI cohort. ARGUS is a **governed agentic system**:
-it takes an open-ended business question (e.g. "do new semiconductor export
-restrictions affect us?"), investigates across live external sources and
-internal knowledge, validates claims against primary sources, surfaces
-contradictions, scores risk **and** confidence separately, and recommends
-actions — with human approval gates for consequential steps.
+ARGUS is a personal project exploring how an AI research assistant can investigate geopolitical, regulatory, supply-chain, and market events. It retrieves organization-specific context, checks claim provenance and contradictions, assesses risk, and suggests actions for human review.
 
-This repository is the **scaffold**: every file is a stub whose top-of-file
-docstring states its role, the blueprint section it implements, and the
-work-stream / pair that owns it.
+The sample company, supplier, product, regulatory, and news information in `data/` is fictional and used for testing. External-tool results are marked `mock: true`; they are not live intelligence.
 
-## Tech stack (per the blueprint)
+## Project structure
 
-LangGraph (orchestration) · ReAct (dynamic investigation) · FAISS RAG
-(internal knowledge) · MCP (external tools) · model cascading (cost) ·
-evaluators + guardrails (quality & safety).
+| Path | Purpose |
+|---|---|
+| `rag/` | Document loading, chunking, indexing, and retrieval |
+| `mcp/` | Mock news and government search clients |
+| `agents/` | Investigation, analysis, verification, risk, and recommendations |
+| `graph/`, `models/`, `config/` | Workflow, data schemas, and settings |
+| `guardrails/` | Input safety, evidence checks, and research budgets |
+| `data/` | Fictional internal documents and external data |
+| `evaluation/` | Quality metrics and repeatable regression benchmark |
+| `tests/` | Component and end-to-end scenario tests |
 
-## Layout
+## Setup
 
-```
-argus/
-├── app.py            Entrypoint: build the graph, run one investigation
-├── config/           Model registry + runtime settings (thresholds, budgets)
-├── graph/            LangGraph state, graph wiring, routing, checkpoints
-├── agents/           Supervisor + ReAct agents (news, internal, verify, risk, recommend, judge)
-├── rag/              FAISS ingestion, retrieval, metadata-aware reranking
-├── mcp/              News / government / market / company tool clients
-├── models/           Claim schema + model-cascade router
-├── guardrails/       Evidence gate helpers, injection defence, access control, budgets
-├── evaluation/       Metrics, regression harness, benchmark datasets (seeded hard cases)
-└── tests/            Unit tests (gate, claims)
+Python 3.11 or newer is recommended.
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
 ```
 
-## Work-stream → pair ownership (for tomorrow)
+The retrieval pipeline uses deterministic local feature vectors. The investigation also keeps a deterministic local path; setting `ARGUS_API_KEY` in `.env` enables the optional OpenAI cascade for query planning, tool choice, and evidence review. When `faiss-cpu` is available, the persisted vector index uses FAISS `IndexFlatIP`; otherwise it uses an exact, dependency-free local index with the same retrieval contract. External news and regulatory sources remain mock data.
 
-| Work-stream | Directories | Pair |
-|---|---|---|
-| Orchestration / platform | `graph/`, `models/schemas.py`, `config/settings.py` | Pair A (tech lead) |
-| RAG / knowledge | `rag/` | Pair B |
-| MCP / integrations | `mcp/` | Pair C |
-| Agents / reasoning | `agents/` | Pair D |
-| Guardrails / governance | `guardrails/` | Pair E |
-| Model economics / eval | `models/cascade.py`, `config/models.py`, `evaluation/` | Pair F |
+Build or reload the local index:
 
-**Frozen interfaces — do not change without the tech lead:** `graph/state.py`
-(`IntelligenceState`, §7), `models/schemas.py` (`Claim`, §15), and the MCP tool
-signatures (§12). Everyone builds against these, so lock them first and let
-other pairs work off stubs/mocks until live versions land.
-
-## Build order (blueprint §26)
-
-1. **Phase 1 — Foundation:** state, supervisor, FAISS ingest/retrieve, one news MCP.
-2. **Phase 2 — Agentic research:** ReAct loop, structured claims, evidence gate, bounded retries.
-3. **Phase 3 — Intelligence quality:** contradiction detection, credibility scoring, verification, evaluator.
-4. **Phase 4 — Model economics:** tiered cascade, confidence-based escalation, cost telemetry.
-5. **Phase 5 — Enterprise controls:** human approval, checkpointing, observability, injection defence.
-6. **Phase 6 — Autonomous mode:** scheduled discovery, clustering, impact ranking.
-
-For the 2-hour session, aim for a **walking skeleton** (Phases 1–2) that passes
-the seeded contradiction scenario in `evaluation/datasets/`.
-
-## Getting started
-
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python app.py "Do new semiconductor export restrictions affect our suppliers?"
+```powershell
+python -c "from rag.ingest import build_index; build_index()"
 ```
 
-> Note on the vector store: the blueprint names FAISS. FAISS has no native
-> metadata filtering, which the "stale contract vs. active replacement"
-> requirement (§25) needs. `rag/faiss_store.py` keeps the interface swappable
-> so the team can move to pgvector/Qdrant if time allows.
+Run an investigation from the command line:
+
+```powershell
+python app.py "There are reports of new semiconductor export restrictions. Investigate what changed, check whether our suppliers/products may be exposed, estimate risk and recommend next actions."
+```
+
+Start the browser interface with `python app.py --web`, then open `http://127.0.0.1:8000`. Enter a question to review the report, risk dimensions, evidence, conflicts, and suggested actions. The local server listens only on this computer. Press Ctrl+C in the terminal to stop it; use `python app.py --web --port 8080` to select another port. The browser interface uses the same mock external-data workflow. When `ARGUS_API_KEY` is configured, model calls are included in the investigation; recommendations are never executed.
+
+Run without a question to start an interactive session. Enter questions repeatedly; type `Exit`, `Quit`, or `Q` to end it. The app builds the local retrieval index on first run. Use `--simulate-tool-failure` to exercise tool errors and safe degradation.
+
+## Tests and evaluation
+
+Run the test suite:
+
+```powershell
+python -m pytest -q
+```
+
+Run the labeled regression benchmark:
+
+```powershell
+python -m evaluation.regression
+```
+
+## Optional OpenAI model cascade
+
+Set `ARGUS_API_KEY` in `.env` to enable the configured tiers in `config/models.py`. ARGUS uses the small tier for query planning and tool choice, medium for routine claim review, and higher reasoning effort for conflicting or date-sensitive evidence. The verifier filters evidence locally and caps model input at ten relevant excerpts. The final report lists model, latency, token usage, and estimated cost. Without a key, the deterministic local workflow runs as before.
+
+## Sample data
+
+- The fictional company is **Northstar Instruments**.
+- **Cirrus Silicon** supplies the controlled advanced accelerator used only by **Helios Edge**; other products do not depend on Cirrus.
+- Current and expired/replacement agreements are included. Retrieval marks expired material stale and boosts its newer replacement.
+- Mock regulatory evidence limits controls to defined advanced accelerator categories and lists an effective date of **2026-09-01**.
+- Mock secondary reports include repeated copies, a conflicting immediate effective date, an unverified viral claim, and a Cirrus statement that deliveries are unaffected. All are labeled MOCK.
+
+## Browser workflow examples
+
+Use these questions to exercise different paths through the fictional corpus. The sample data is not live intelligence.
+
+- **Unsupported event:** “I heard there may be a new supplier disruption, but I don't know which supplier. What can you verify, and what remains unknown?” Expected: no matching external event evidence; unrelated export-control notices should not be presented.
+- **Regulatory scope and conflicting date:** “When do the new semiconductor export controls take effect? Compare the official notice with industry reports and explain any disagreement.” Expected: cite the official 2026-09-01 date and disclose the unverified immediate-effect claim.
+- **Viral misinformation:** “Is the viral claim that all consumer electronics exports are banned supported by authoritative evidence?” Expected: label the claim unverified and distinguish it from the narrower official notice.
+- **Supplier assurance and exposure:** “Cirrus Silicon says committed deliveries are unaffected. Does that confirm Helios Edge is outside the export controls?” Expected: distinguish delivery assurance from legal product coverage and identify the possible mapping.
+- **Inventory and continuity:** “How much Helios Edge accelerator inventory do we have, and what should operations verify before making a continuity decision?” Expected: retrieve the fictional 45-day inventory note and recommend human-reviewed follow-up.
+- **Current agreement:** “What is the current Kestrel Components contract, and has an older agreement been replaced?” Expected: rank active contract v2 above expired v1 and mark the old version stale.
+- **Internal mapping:** “Which Northstar product uses the advanced accelerator supplied by Cirrus Silicon?” Expected: map Cirrus Silicon to Helios Edge without claiming other products are affected.
+
+## Risk scoring and guardrails
+
+Risk is a weighted average on a 1–10 scale: `impact * 0.40 + probability * 0.35 + urgency * 0.25`. Change weights and limits with the placeholders in `.env.example`; the weights must add to 1. Evidence confidence and quality are separate scores. The workflow has a bounded research loop, reports tool failures and unresolved conflicts, flags prompt-injection-like text in evidence, and labels supplier, procurement, and legal actions for human review.

@@ -1,26 +1,14 @@
-﻿"""Stretch placeholder for market data integrations.
+"""mock market intelligence client."""
 
-No live or mock market feed is configured; this client reports an explicit
-error so callers cannot mistake an unsupported request for empty evidence.
-"""
-from mcp.result import ToolResult
-
-
-def _not_implemented(tool: str) -> ToolResult:
-    return {"status": "error", "mock": False, "items": [], "error": f"{tool} is not implemented"}
+# ARGUS workflow: optional external market lookup, called during evidence discovery.
+# Input: a market symbol, such as a fictional ticker or commodity code.
+# Output: clearly labeled mock ToolResult-style response; market data is not implemented yet.
 
 
-def get_stock_price(symbol: str) -> ToolResult:
-    return _not_implemented("get_stock_price")
-
-
-def get_fx_rate(base: str, quote: str) -> ToolResult:
-    return _not_implemented("get_fx_rate")
-
-
-def get_commodity_price(commodity: str) -> ToolResult:
-    return _not_implemented("get_commodity_price")
-
-
-def get_market_news(query: str) -> ToolResult:
-    return _not_implemented("get_market_news")
+def get_market_signal(symbol: str) -> dict:
+    """Return a labeled not-implemented response until the stretch task is built."""
+    # A blank symbol is a caller input error, not an empty search result.
+    if not symbol.strip():
+        raise ValueError("symbol must not be empty")
+    # Return the standard status fields so an investigator can handle this stub safely.
+    return {"status": "empty", "mock": True, "items": [], "error": "Market mock data is not configured."}

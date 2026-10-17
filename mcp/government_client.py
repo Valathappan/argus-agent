@@ -1,30 +1,19 @@
-﻿"""Search clearly labelled mock government and regulatory notices."""
+"""mock government/regulatory search client."""
+
+# ARGUS workflow: external evidence discovery, called when regulatory evidence is needed.
+# Input: search words, an optional jurisdiction, and an optional failure-test switch.
+# Output: ToolResult-style dictionary containing mock notices or an explicit empty/error status.
+
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Any
 
-from mcp.result import ToolResult
-
-_DATA_PATH = Path(__file__).resolve().parents[1] / "Data" / "mock" / "government_notices.json"
+from mcp.search_utils import search_terms
 
 
-def _load_items() -> list[dict[str, Any]]:
-    with _DATA_PATH.open(encoding="utf-8-sig") as stream:
-        items = json.load(stream)
-    if not isinstance(items, list):
-        raise ValueError("Mock government fixture must contain a JSON list")
-    return items
-
-
-def _matches_query(item: dict[str, Any], query: str) -> bool:
-    terms = set(re.findall(r"[a-z0-9]+", query.casefold()))
-    if not terms:
-        return True
-    searchable = " ".join(str(item.get(key, "")) for key in ("title", "snippet", "source")).casefold()
-    return any(term in searchable for term in terms)
+MOCK_FILE = Path(__file__).resolve().parents[1] / "data" / "mock" / "regulations.json"
 
 
 def search_regulation(
@@ -32,21 +21,56 @@ def search_regulation(
     jurisdiction: str | None = None,
     *,
     simulate_failure: bool = False,
-) -> ToolResult:
-    """Search mock regulatory notices by query and optional jurisdiction.
+) -> dict[str, Any]:
+    """Search fictional official notices and return the shared ToolResult shape.
 
-    Set ``simulate_failure=True`` to return a deterministic timeout result.
+    The source records are examples, not real government information. The
+    jurisdiction argument can narrow the results to a particular region.
     """
+    # Simulated failures allow investigators to test graceful degradation.
     if simulate_failure:
-        return {"status": "error", "mock": True, "items": [], "error": "Simulated regulatory tool timeout"}
+        return {
+            "status": "error",
+            "mock": True,
+            "items": [],
+            "error": "Simulated government search timeout.",
+        }
+    # Require an actual search phrase before accessing the source data.
+    if not query or not query.strip():
+        raise ValueError("query must contain non-whitespace text")
+    # Read the local mock-notice file and keep data problems distinct from no matches.
     try:
-        items = _load_items()
-        found = [
-            {**item, "mock": True}
-            for item in items
-            if _matches_query(item, query)
-            and (jurisdiction is None or jurisdiction.casefold() in str(item.get("jurisdiction", "")).casefold())
-        ]
-    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-        return {"status": "error", "mock": True, "items": [], "error": f"Unable to read mock regulatory data: {exc}"}
-    return {"status": "ok" if found else "empty", "mock": True, "items": found, "error": None}
+        entries = json.loads(MOCK_FILE.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return {"status": "error", "mock": True, "items": [], "error": f"Unable to read mock regulation data: {exc}"}
+    except json.JSONDecodeError as exc:
+        return {"status": "error", "mock": True, "items": [], "error": f"Invalid mock regulation data: {exc}"}
+
+    # Ignore generic prompt words so broad questions do not match unrelated notices.
+    terms = search_terms(query)
+    if not terms:
+        return {"status": "empty", "mock": True, "items": [], "error": None}
+    matches: list[dict[str, Any]] = []
+    for entry in entries:
+        # Include notice title, description, region, tags, and publisher in the search.
+        searchable = " ".join(
+            str(entry.get(key, ""))
+            for key in ("title", "snippet", "jurisdiction", "tags", "source")
+        ).casefold()
+        if terms and not any(term in searchable for term in terms):
+            continue
+        # If requested, require the notice jurisdiction to match the given text.
+        if jurisdiction and jurisdiction.casefold() not in str(entry.get("jurisdiction", "")).casefold():
+            continue
+        # Keep the external tool response small and consistent with the shared contract.
+        item = {key: entry[key] for key in ("title", "source", "url", "date", "snippet", "source_type")}
+        item["mock"] = True
+        item["source_id"] = str(entry["id"])
+        matches.append(item)
+    # An empty result is a successful search with no matching notices.
+    return {
+        "status": "ok" if matches else "empty",
+        "mock": True,
+        "items": matches,
+        "error": None,
+    }

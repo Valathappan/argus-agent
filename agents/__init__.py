@@ -1,4 +1,2 @@
-"""Package marker.
+"""ARGUS agent package; ownership is identified by each module."""
 
-Work-stream / owner: Agents / reasoning (Pair D)
-"""

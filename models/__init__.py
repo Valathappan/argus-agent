@@ -1,4 +1,1 @@
-"""Package marker.
-
-Work-stream / owner: Model economics (Pair F)
-"""
+"""ARGUS shared model package."""
