@@ -1,69 +1,84 @@
-﻿"""Search clearly labelled mock news fixtures.
+"""mock news search client with explicit empty/error result states."""
 
-The fixtures are fictional classroom data, never live reporting.
-"""
+# ARGUS workflow: external evidence discovery, called by the news investigator.
+# Input: search words and optional date/region filters; failure simulation is for tests.
+# Output: ToolResult-style dictionary with status, mock flag, matching articles, and error.
+
 from __future__ import annotations
 
 import json
-import re
-from datetime import date
 from pathlib import Path
 from typing import Any
 
-from mcp.result import ToolResult
-
-_DATA_PATH = Path(__file__).resolve().parents[1] / "Data" / "mock" / "news.json"
+from mcp.search_utils import search_terms
 
 
-def _load_items() -> list[dict[str, Any]]:
-    with _DATA_PATH.open(encoding="utf-8-sig") as stream:
-        items = json.load(stream)
-    if not isinstance(items, list):
-        raise ValueError("Mock news fixture must contain a JSON list")
-    return items
+MOCK_FILE = Path(__file__).resolve().parents[1] / "data" / "mock" / "news.json"
 
 
-def _matches_query(item: dict[str, Any], query: str) -> bool:
-    terms = set(re.findall(r"[a-z0-9]+", query.casefold()))
-    if not terms:
-        return True
-    searchable = " ".join(str(item.get(key, "")) for key in ("title", "snippet", "source")).casefold()
-    return any(term in searchable for term in terms)
-
-
-def _in_date_range(item: dict[str, Any], date_range: tuple[str | date, str | date] | None) -> bool:
-    if date_range is None:
-        return True
-    if len(date_range) != 2:
-        raise ValueError("date_range must be a (start, end) pair")
-    start, end = (value if isinstance(value, date) else date.fromisoformat(value) for value in date_range)
-    item_date = date.fromisoformat(item["date"])
-    return start <= item_date <= end
+def _tool_error(message: str) -> dict[str, Any]:
+    """Build a consistent error response instead of pretending a failure is no results."""
+    return {"status": "error", "mock": True, "items": [], "error": message}
 
 
 def search_news(
     query: str,
-    date_range: tuple[str | date, str | date] | None = None,
+    date_range: tuple[str, str] | None = None,
     region: str | None = None,
     *,
     simulate_failure: bool = False,
-) -> ToolResult:
-    """Search mock news by query, inclusive ISO date range, and region.
+) -> dict[str, Any]:
+    """Search the clearly labeled local mock-news corpus.
 
-    Set ``simulate_failure=True`` to return a deterministic timeout result for
-    testing callers' degradation behavior.
+    Results are mock examples, not live reporting. A caller can filter matches
+    by date and region, or simulate a timeout to test failure handling.
     """
+    # Let tests check safe handling of unavailable tools without changing files or network.
     if simulate_failure:
-        return {"status": "error", "mock": True, "items": [], "error": "Simulated news tool timeout"}
+        return _tool_error("Simulated news tool timeout.")
+    # Reject incomplete requests before reading the mock data.
+    if not query or not query.strip():
+        raise ValueError("query must contain non-whitespace text")
+    if date_range and len(date_range) != 2:
+        raise ValueError("date_range must contain an inclusive start and end date")
+    # Read the local JSON corpus; report file or JSON problems as tool errors.
     try:
-        items = _load_items()
-        found = [
-            {**item, "mock": True}
-            for item in items
-            if _matches_query(item, query)
-            and _in_date_range(item, date_range)
-            and (region is None or region.casefold() in str(item.get("region", "")).casefold())
-        ]
-    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-        return {"status": "error", "mock": True, "items": [], "error": f"Unable to read mock news data: {exc}"}
-    return {"status": "ok" if found else "empty", "mock": True, "items": found, "error": None}
+        entries = json.loads(MOCK_FILE.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return _tool_error(f"Unable to read mock news data: {exc}")
+    except json.JSONDecodeError as exc:
+        return _tool_error(f"Invalid mock news data: {exc}")
+
+    # Ignore generic prompt words so broad questions do not match unrelated stories.
+    terms = search_terms(query)
+    if not terms:
+        return {"status": "empty", "mock": True, "items": [], "error": None}
+    matches: list[dict[str, Any]] = []
+    for entry in entries:
+        # Search across the fields that describe what the article is about.
+        searchable = " ".join(
+            str(entry.get(key, ""))
+            for key in ("title", "snippet", "source", "region", "tags")
+        ).casefold()
+        if terms and not any(term in searchable for term in terms):
+            continue
+        # Apply optional filters after the text match to narrow results.
+        if region and region.casefold() not in str(entry.get("region", "")).casefold():
+            continue
+        entry_date = str(entry.get("date", ""))
+        if date_range and not (date_range[0] <= entry_date <= date_range[1]):
+            continue
+        # Return the agreed public fields, with mock/source IDs for traceability.
+        item = {key: entry[key] for key in ("title", "source", "url", "date", "snippet", "source_type")}
+        item["mock"] = True
+        item["source_id"] = str(entry["id"])
+        if entry.get("duplicate_of"):
+            item["duplicate_of"] = str(entry["duplicate_of"])
+        matches.append(item)
+    # "empty" means the search worked but found nothing; it is different from "error".
+    return {
+        "status": "ok" if matches else "empty",
+        "mock": True,
+        "items": matches,
+        "error": None,
+    }

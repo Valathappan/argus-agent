@@ -1,4 +1,1 @@
-"""Package marker.
-
-Work-stream / owner: Orchestration (shared)
-"""
+"""ARGUS configuration package."""

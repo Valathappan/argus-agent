@@ -1,4 +1,1 @@
-"""Package marker.
-
-Work-stream / owner: Model economics / eval (Pair F)
-"""
+"""ARGUS evaluation package."""

@@ -1,11 +1,5 @@
-"""Pre-retrieval access control over sensitive internal documents.
+"""access-control placeholder."""
 
-ARGUS - Autonomous Risk & Global Unified Surveillance Agent (class build).
-
-  Work-stream / owner : Guardrails / governance (Pair E)
-  Blueprint reference : §21
-
-TODO (tomorrow):
-  - Filter chunks by confidentiality/role before they reach an analyst
-    agent.
-"""
+# Input: retrieved document fields and a caller role when authorization is enabled.
+# Output: role-filtered or masked evidence. This is optional stretch work and does
+# not replace a production authorization system.

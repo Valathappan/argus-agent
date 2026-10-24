@@ -1,41 +1,35 @@
-"""Ingestion pipeline: PDFs -> pages -> chunks -> embeddings -> ChromaDB."""
+"""orchestrate document loading, chunking, embedding, and persistence."""
 
-from collections import Counter
+# RAG sequence: 4/5 — connect loading, chunking, embedding, and index persistence.
+# Input: source-document directory and optional destination index directory.
+# Output: number of indexed chunks; the persisted index is ready for retrieval.
 
-from rich.console import Console
-from rich.panel import Panel
+from __future__ import annotations
 
-from config.settings import settings
-from rag.chunking import chunk_pages
-from rag.ingestion import store_chunks
-from rag.loader import load_pdfs
+from pathlib import Path
 
-console = Console()
-
-
-def main():
-    console.rule("Step 1: Load PDFs")
-    pages = load_pdfs(settings.pdf_dir)
-    if not pages:
-        console.print(f"[red]No PDF text found in {settings.pdf_dir}. Add your PDFs there and run again.[/red]")
-        return
-    for source, count in Counter(page.source for page in pages).items():
-        console.print(f"  {source}: {count} pages")
-
-    console.rule("Step 2: Split pages into chunks")
-    chunks = chunk_pages(pages, settings.chunk_size, settings.chunk_overlap)
-    console.print(
-        f"  {len(pages)} pages -> {len(chunks)} chunks "
-        f"(chunk size {settings.chunk_size} words, overlap {settings.chunk_overlap} words)"
-    )
-    for chunk in chunks[:2]:
-        console.print(Panel(chunk.text, title=f"Sample chunk: {chunk.id}", border_style="cyan"))
-
-    console.rule("Step 3: Embed chunks and store them in ChromaDB")
-    stored = store_chunks(chunks)
-    console.print(f"  [green]Stored {stored} chunks in collection '{settings.collection_name}'[/green]")
-    console.print(f"  Database folder: {settings.chroma_dir}")
+from rag.chunking import chunk_documents
+from rag.faiss_store import VectorStore
+from rag.loader import load_documents
 
 
-if __name__ == "__main__":
-    main()
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DATA_DIR = PROJECT_ROOT / "data" / "sample_docs"
+DEFAULT_INDEX_DIR = PROJECT_ROOT / "data" / "index"
+
+
+def build_index(
+    data_dir: str | Path = DEFAULT_DATA_DIR,
+    index_dir: str | Path = DEFAULT_INDEX_DIR,
+) -> int:
+    """Build and persist the knowledge index; return the number of chunks indexed."""
+    # Keep orchestration here; parsing, chunking, and vector storage stay separate.
+    documents = load_documents(data_dir)
+    if not documents:
+        raise ValueError(f"No supported documents found under {data_dir}")
+    chunks = chunk_documents(documents)
+    if not chunks:
+        raise ValueError(f"Documents under {data_dir} contained no indexable text")
+    # Embed all chunks and persist both their text/metadata and the vector index.
+    VectorStore.from_chunks(chunks).save(index_dir)
+    return len(chunks)

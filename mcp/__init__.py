@@ -1,4 +1,5 @@
-﻿"""MCP-style external intelligence clients for ARGUS."""
-from mcp.result import ToolItem, ToolResult
+"""mock MCP-style external intelligence clients."""
 
-__all__ = ["ToolItem", "ToolResult"]
+# ARGUS workflow: this package provides external intelligence tool adapters.
+# Input: imports of the news, government, market, or company client modules.
+# Output: exposes the MCP package namespace; each client defines its own callable.

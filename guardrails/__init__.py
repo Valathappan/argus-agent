@@ -1,4 +1,1 @@
-"""Package marker.
-
-Work-stream / owner: Guardrails / governance (Pair E)
-"""
+"""ARGUS safety and quality package."""
